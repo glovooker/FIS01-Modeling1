@@ -1,288 +1,274 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Tiro Parabólico</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        #canvasContainer {
-            margin-bottom: 20px;
-            position: relative;
-        }
-        #gameOverlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        #controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-            max-width: 800px;
-        }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, button {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            min-width: 100px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #error-message {
-            color: red;
-            margin-top: 10px;
-            min-height: 20px;
-        }
-        #physics-values {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 8px;
-            max-width: 800px;
-            margin-top: 20px;
-        }
-        .value-display {
-            margin-bottom: 10px;
-        }
-        #gameStatus {
-            background-color: #4a4a4a;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            max-width: 800px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        #gameStatus h2 {
-            margin-top: 0;
-        }
-        .lives {
-            font-size: 24px;
-            color: red;
-        }
-        .medal {
-            font-size: 30px;
-            margin: 0 5px;
-        }
-        #gameMessage {
-            font-size: 18px;
-            font-weight: bold;
-            color: #FFD700;
-            margin-top: 10px;
-            min-height: 27px;
-        }
-        #resetGameBtn {
-            background-color: #f44336;
-            margin-top: 10px;
-        }
-        /* Estilo para la sección de reglas */
-        #rules {
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            max-width: 800px;
-        }
-        #rules h2 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        #rules h3 {
-            color: #3498db;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-        #rules ul {
-            padding-left: 20px;
-        }
-        #rules li {
-            margin-bottom: 5px;
-            line-height: 1.5;
-        }
-        #rulesToggle {
-            background-color: #3498db;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Juego de Tiro Parabólico</h1>
-    
-    <div id="canvasContainer">
-        <div id="gameOverlay"></div>
-    </div>
-    
-    <div id="controls">
-        <div class="input-group">
-            <label for="initialVelocity">Velocidad Inicial (m/s):</label>
-            <input type="number" id="initialVelocity" value="20" min="1" max="100">
-        </div>
-        
-        <div class="input-group">
-            <label for="launchAngle">Ángulo de Lanzamiento (grados):</label>
-            <input type="number" id="launchAngle" value="45" min="1" max="89">
-        </div>
-        
-        <div class="input-group">
-            <label for="initialHeight">Altura Inicial (m):</label>
-            <input type="number" id="initialHeight" value="0" min="0" max="100">
-        </div>
-        
-        <div class="input-group">
-            <label for="gravity">Gravedad (m/s²):</label>
-            <input type="number" id="gravity" value="9.8" min="1" max="20" step="0.1">
-        </div>
-        
-        <button id="startBtn">Lanzar</button>
-        <!-- <button id="resetBtn">Reiniciar Lanzamiento</button> -->
-    </div>
-    
-    <div id="error-message"></div>
-    
-    <div id="physics-values">
-        <h3>Valores Físicos en Tiempo Real:</h3>
-        <div class="value-display">Tiempo: <span id="time">0.00</span> s</div>
-        <div class="value-display">Posición X: <span id="posX">0.00</span> m</div>
-        <div class="value-display">Posición Y: <span id="posY">0.00</span> m</div>
-        <div class="value-display">Velocidad X: <span id="velX">0.00</span> m/s</div>
-        <div class="value-display">Velocidad Y: <span id="velY">0.00</span> m/s</div>
-        <div class="value-display">Velocidad Total: <span id="velTotal">0.00</span> m/s</div>
-    </div>
-    
-    <div id="gameStatus">
-        <h2>Estado del Juego</h2>
-        <div>Puntuación: <span id="score">0</span></div>
-        <div>Vidas: <span id="lives" class="lives">❤️❤️❤️</span></div>
-        <div>Medalla: <span id="medal"></span></div>
-        <div id="gameMessage"></div>
-        <button id="resetGameBtn">Nuevo Juego</button>
-    </div>
-    
-    <button id="rulesToggle">Mostrar Reglas del Juego</button>
-    
-    <div id="rules" style="display: none;">
-        <h2>Reglas del Juego y Limitaciones del Sistema</h2>
-        
-        <h3>Objetivo del Juego</h3>
-        <ul>
-            <li>Lanzar el proyectil para golpear la diana de color rojo.</li>
-            <li>Cada vez que golpees la diana, ganarás 10 puntos.</li>
-            <li>Tienes 3 vidas. Pierdes una vida cada vez que el proyectil toca el suelo sin golpear la diana.</li>
-            <li>El juego termina cuando pierdes todas tus vidas.</li>
-        </ul>
-        
-        <h3>Medallas</h3>
-        <ul>
-            <li><strong>🥉 Medalla de Bronce:</strong> 50 puntos (5 dianas golpeadas)</li>
-            <li><strong>🥈 Medalla de Plata:</strong> 100 puntos (10 dianas golpeadas)</li>
-            <li><strong>🥇 Medalla de Oro:</strong> 200 puntos (20 dianas golpeadas)</li>
-        </ul>
-        
-        <h3>Limitaciones del Sistema</h3>
-        <ul>
-            <li>La diana aparece en una posición aleatoria entre 5-35 metros en horizontal y 1-15 metros en vertical.</li>
-            <li>El proyectil se lanza siempre desde la posición (0, altura inicial).</li>
-            <li>La simulación corresponde a tiempo real: cada segundo de simulación equivale a un segundo en la vida real.</li>
-            <li>La colisión con la diana se detecta cuando el proyectil está a menos de 1.25 metros del centro (25 píxeles).</li>
-        </ul>
-        
-        <h3>Parámetros Válidos</h3>
-        <ul>
-            <li><strong>Velocidad Inicial:</strong> 1-100 m/s</li>
-            <li><strong>Ángulo de Lanzamiento:</strong> 1-89 grados</li>
-            <li><strong>Altura Inicial:</strong> 0-100 metros</li>
-            <li><strong>Gravedad:</strong> 1-20 m/s²</li>
-        </ul>
-        
-        <h3>Fórmulas Físicas Utilizadas</h3>
-        <ul>
-            <li><strong>Posición horizontal (x):</strong> x = v₀ᵪ · t</li>
-            <li><strong>Posición vertical (y):</strong> y = h₀ + v₀ᵧ · t - ½ · g · t²</li>
-            <li><strong>Velocidad horizontal (vₓ):</strong> vₓ = v₀ · cos(θ) [constante]</li>
-            <li><strong>Velocidad vertical (vᵧ):</strong> vᵧ = v₀ · sen(θ) - g · t</li>
-            <li><strong>Velocidad total:</strong> v = √(vₓ² + vᵧ²)</li>
-        </ul>
-        
-        <h3>Consejos</h3>
-        <ul>
-            <li>Ajusta el ángulo de lanzamiento según la distancia a la que se encuentra la diana.</li>
-            <li>Para dianas lejanas, utiliza mayor velocidad inicial.</li>
-            <li>Para dianas elevadas, utiliza ángulos más pronunciados.</li>
-            <li>La posición óptima del ángulo para alcanzar la máxima distancia es 45°.</li>
-        </ul>
-    </div>
 
-    <script>
-        // Variables globales
-        let projectile;
-        let ground;
-        let target;
-        let isSimulationRunning = false;
-        let startTime;
-        let errorMessageElement;
-        let canvasWidth = 800;
-        let canvasHeight = 500;
-        let pixelsPerMeter = 20; // Factor de escala para convertir metros a píxeles
-        
-        // Variables del juego
-        let score = 0;
-        let lives = 3;
-        let isGameOver = false;
-        
-        // Clase Diana
-        class Target {
-            constructor() {
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Juego de Tiro Parabólico</title>
+        <!-- Bootstrap CSS -->
+        <link 
+            rel="stylesheet" 
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        >
+        <!-- P5.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+
+        <style>
+            /* Ajustamos margen y fuente base */
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+                background-color: #1f1f1f;
+            }
+            h1 {
+                font-weight: 600;
+                color: #f1f1f1;
+            }
+
+            /* Contenedor del lienzo para que el overlay quede arriba */
+            #canvasContainer {
+                position: relative;
+                margin-bottom: 20px;
+                display: flex;
+            }
+            #gameOverlay {
+                position: absolute;
+                top: -60px;
+                left: 50px;
+                background-color: rgba(255, 255, 255, 0.7);
+                padding: 10px;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+
+            /* Eliminamos display flex en #controls y dejamos que Bootstrap maneje la maquetación */
+            #controls .input-group {
+                margin-bottom: 15px;
+                display: flex;
+                flex-direction: column;
+            }
+            #controls label {
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            #controls input {
+                width: 100%;
+            }
+
+            /* Mensaje de error */
+            #error-message {
+                color: red;
+                min-height: 20px;
+            }
+
+            /* Cuadro de valores físicos */
+            #physics-values .value-display {
+                margin-bottom: 10px;
+            }
+
+            /* Estado del juego */
+            .game-status {
+                text-align: center;
+            }
+            .game-status .lives {
+                font-size: 24px;
+                color: red;
+            }
+            .game-status .medal {
+                font-size: 30px;
+                margin: 0 5px;
+            }
+            .game-status #gameMessage {
+                font-size: 18px;
+                font-weight: bold;
+                margin-top: 10px;
+                min-height: 27px;
+            }
+
+            /* Reglas del juego */
+            #rules {
+                display: none; /* Oculto por defecto */
+            }
+            #rules h2 {
+                border-bottom: 2px solid #3498db;
+                padding-bottom: 10px;
+                margin-top: 0;
+            }
+
+            /* Estilo para el lienzo (canvas) */
+            canvas {
+                border: 2px solid #0f0f0f;
+                display: block;
+                border-radius: 5px;
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container-fluid my-3">
+            <div class="row">
+                <!-- SIDEBAR IZQUIERDA (Controles, info en vivo, estado del juego, reglas) -->
+            <div class="col-md-2">
+                
+                <!-- Tarjeta para Controles -->
+                <div class="card mb-3">
+                <div class="card-body" id="controls">
+                    <h5 class="card-title">Controles</h5>
+                    
+                    <div class="input-group">
+                    <label for="initialVelocity">Velocidad Inicial (m/s):</label>
+                    <input type="number" class="form-control" id="initialVelocity" value="20" min="1" max="100">
+                    </div>
+                    
+                    <div class="input-group">
+                    <label for="launchAngle">Ángulo de Lanzamiento (grados):</label>
+                    <input type="number" class="form-control" id="launchAngle" value="45" min="1" max="89">
+                    </div>
+                    
+                    <div class="input-group">
+                    <label for="initialHeight">Altura Inicial (m):</label>
+                    <input type="number" class="form-control" id="initialHeight" value="0" min="0" max="100">
+                    </div>
+                    
+                    <div class="input-group">
+                    <label for="gravity">Gravedad (m/s²):</label>
+                    <input type="number" class="form-control" id="gravity" value="9.8" min="1" max="20" step="0.1">
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-primary" id="startBtn">Lanzar</button>
+                    <div id="error-message"></div>
+                    </div>
+                </div>
+                </div>
+                
+                <!-- Tarjeta para valores físicos -->
+                <div class="card mb-3">
+                <div class="card-body" id="physics-values">
+                    <h5 class="card-title">Valores Físicos en Tiempo Real</h5>
+                    <div class="value-display">Tiempo: <span id="time">0.00</span> s</div>
+                    <div class="value-display">Posición X: <span id="posX">0.00</span> m</div>
+                    <div class="value-display">Posición Y: <span id="posY">0.00</span> m</div>
+                    <div class="value-display">Velocidad X: <span id="velX">0.00</span> m/s</div>
+                    <div class="value-display">Velocidad Y: <span id="velY">0.00</span> m/s</div>
+                    <div class="value-display">Velocidad Total: <span id="velTotal">0.00</span> m/s</div>
+                </div>
+                </div>
+                
+                <!-- Tarjeta para estado del juego -->
+                <div class="card mb-3">
+                <div class="card-body game-status" id="gameStatus">
+                    <h5 class="card-title">Estado del Juego</h5>
+                    <div>Puntuación: <span id="score">0</span></div>
+                    <div>Vidas: <span id="lives" class="lives">❤️❤️❤️</span></div>
+                    <div>Medalla: <span id="medal"></span></div>
+                    <div id="gameMessage" class="mt-2 text-warning"></div>
+                    <button class="btn btn-danger mt-3" id="resetGameBtn">Nuevo Juego</button>
+                </div>
+                </div>
+
+                <!-- Botón para mostrar/ocultar reglas -->
+                <button class="btn btn-info mb-3 w-100" id="rulesToggle">Mostrar Reglas del Juego</button>
+            </div> <!-- Fin de col-md-4 -->
+                
+            <!-- COLUMNA PRINCIPAL (Lienzo y título) -->
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">🎯Juego de Tiro Parabólico🎯</h1>
+                
+                <div id="canvasContainer" class="text-end">
+                    <div id="gameOverlay"></div>
+                <!-- El canvas p5.js se inyectará aquí -->
+                </div>
+            </div>
+            
+                <!-- SIDEBAR DERECHA (Reglas del juego) -->
+                <div class="col-md-2">
+                    <!-- Tarjeta de Reglas (oculta al inicio) -->
+                <div class="card" id="rules">
+                    <div class="card-body">
+                    <h2>Reglas del Juego y Limitaciones del Sistema</h2>
+                    
+                    <h3>Objetivo del Juego</h3>
+                    <ul>
+                        <li>Lanzar el proyectil para golpear la diana de color rojo.</li>
+                        <li>Cada vez que golpees la diana, ganarás 10 puntos.</li>
+                        <li>Tienes 3 vidas. Pierdes una vida cada vez que el proyectil toca el suelo sin golpear la diana.</li>
+                        <li>El juego termina cuando pierdes todas tus vidas.</li>
+                    </ul>
+                    
+                    <h3>Medallas</h3>
+                    <ul>
+                        <li><strong>🥉 Medalla de Bronce:</strong> 50 puntos</li>
+                        <li><strong>🥈 Medalla de Plata:</strong> 100 puntos</li>
+                        <li><strong>🥇 Medalla de Oro:</strong> 200 puntos</li>
+                    </ul>
+                    
+                    <h3>Limitaciones del Sistema</h3>
+                    <ul>
+                        <li>Diana entre 5-35 m en horizontal y 1-15 m en vertical.</li>
+                        <li>El proyectil se lanza siempre desde (0, altura inicial).</li>
+                        <li>La simulación va a tiempo real (1 seg de simulación = 1 seg real).</li>
+                        <li>La colisión se detecta cuando el proyectil está a menos de 1.25 m del centro de la diana.</li>
+                    </ul>
+                    
+                    <h3>Parámetros Válidos</h3>
+                    <ul>
+                        <li><strong>Velocidad Inicial:</strong> 1-100 m/s</li>
+                        <li><strong>Ángulo de Lanzamiento:</strong> 1-89 grados</li>
+                        <li><strong>Altura Inicial:</strong> 0-100 m</li>
+                        <li><strong>Gravedad:</strong> 1-20 m/s²</li>
+                    </ul>
+                    
+                    <h3>Fórmulas Físicas Utilizadas</h3>
+                    <ul>
+                        <li><strong>Posición X:</strong> x = v₀ᵪ · t</li>
+                        <li><strong>Posición Y:</strong> y = h₀ + v₀ᵧ · t - ½·g·t²</li>
+                        <li><strong>Vel. Horizontal (vₓ):</strong> v₀ · cos(θ) (constante)</li>
+                        <li><strong>Vel. Vertical (vᵧ):</strong> v₀ · sen(θ) - g·t</li>
+                        <li><strong>Vel. Total:</strong> √(vₓ² + vᵧ²)</li>
+                    </ul>
+                    
+                    <h3>Consejos</h3>
+                    <ul>
+                        <li>Ajusta el ángulo según la distancia de la diana.</li>
+                        <li>Usa mayor velocidad inicial para objetivos lejanos.</li>
+                        <li>Para dianas elevadas, usa ángulos más altos.</li>
+                        <li>El ángulo de 45° maximiza alcance en condiciones ideales.</li>
+                    </ul>
+                    </div>
+                </div>
+                </div> <!-- Fin de col-md-4 -->
+            </div> <!-- Fin de row -->
+        </div> <!-- Fin de container-fluid -->
+
+        <script>
+            let projectile;
+            let ground;
+            let target;
+            let isSimulationRunning = false;
+            let startTime;
+            let errorMessageElement;
+            let canvasWidth = 1400;
+            let canvasHeight = 950;
+            let pixelsPerMeter = 20;
+            let score = 0;
+            let lives = 3;
+            let isGameOver = false;
+
+            class Target {
+                constructor() {
                 this.setRandomPosition();
                 this.radius = 15;
-                this.hitRadius = 25; // Radio para detectar colisiones (un poco más grande que la diana visual)
+                this.hitRadius = 25;
                 this.color = color(255, 0, 0);
                 this.ringColor = color(255, 255, 255);
-            }
-            
-            setRandomPosition() {
-                // Generar posición aleatoria, pero asegurando que sea alcanzable
-                // Distancia horizontal entre 5 y 35 metros
-                this.position = createVector(
-                    random(5, 35),
-                    random(1, 15) // Altura entre 1 y 15 metros
-                );
-            }
-            
-            draw() {
-                // Dibujar la diana
+                }
+                setRandomPosition() {
+                this.position = createVector(random(5, 35), random(1, 15));
+                }
+                draw() {
                 noStroke();
-                
                 // Anillo exterior
                 fill(this.ringColor);
                 ellipse(
@@ -291,7 +277,6 @@
                     this.radius * 2.2,
                     this.radius * 2.2
                 );
-                
                 // Círculo central
                 fill(this.color);
                 ellipse(
@@ -300,7 +285,6 @@
                     this.radius * 1.5,
                     this.radius * 1.5
                 );
-                
                 // Punto central
                 fill(255, 255, 0);
                 ellipse(
@@ -309,428 +293,339 @@
                     this.radius * 0.5,
                     this.radius * 0.5
                 );
-            }
-            
-            checkHit(projectilePosition) {
-                // Calcular distancia entre el proyectil y el centro de la diana
+                }
+                checkHit(projectilePosition) {
                 let distance = dist(
                     this.position.x, 
                     this.position.y, 
                     projectilePosition.x, 
                     projectilePosition.y
                 );
-                
-                // Si la distancia es menor que el radio de colisión, es un golpe
                 return distance <= (this.hitRadius / pixelsPerMeter);
+                }
             }
-        }
-        
-        // Clase Proyectil
-        class Projectile {
-            constructor(initialVelocity, launchAngle, initialHeight, gravity) {
-                // Parámetros iniciales
+
+            class Projectile {
+                constructor(initialVelocity, launchAngle, initialHeight, gravity) {
                 this.initialVelocity = initialVelocity;
-                this.launchAngle = launchAngle * (Math.PI / 180); // Convertir a radianes
+                this.launchAngle = launchAngle * (Math.PI / 180);
                 this.initialHeight = initialHeight;
                 this.gravity = gravity;
-                
-                // Estado actual
+
                 this.position = createVector(0, initialHeight);
                 this.velocity = createVector(
                     initialVelocity * Math.cos(this.launchAngle),
-                    initialVelocity * Math.sin(this.launchAngle) // Positivo porque queremos que suba
+                    initialVelocity * Math.sin(this.launchAngle)
                 );
                 this.time = 0;
-                
-                // Aspecto visual
                 this.radius = 8;
                 this.color = color(50, 50, 255);
-                
-                // Trayectoria
                 this.trajectory = [];
-                
-                // Estado del proyectil
                 this.hasHitTarget = false;
                 this.hasHitGround = false;
-            }
-            
-            update(deltaTime) {
-                // Si ya golpeó algo, no actualizar
+                }
+                update(deltaTime) {
                 if (this.hasHitTarget || this.hasHitGround) return;
-                
-                // Actualizar tiempo
                 this.time += deltaTime;
-                
-                // Calcular nueva posición con las ecuaciones de movimiento
-                // x = x0 + vx * t
-                // y = y0 + vy * t - 0.5 * g * t^2
                 this.position.x = this.velocity.x * this.time;
-                this.position.y = this.initialHeight + (this.velocity.y * this.time) - (0.5 * this.gravity * Math.pow(this.time, 2));
-                
-                // Actualizar velocidad en Y (vY = vY0 - g*t)
+                this.position.y = this.initialHeight + 
+                                    (this.velocity.y * this.time) - 
+                                    (0.5 * this.gravity * Math.pow(this.time, 2));
+
                 let currentVy = this.velocity.y - (this.gravity * this.time);
-                
-                // Guardar posición actual para la trayectoria
                 this.trajectory.push(createVector(this.position.x, this.position.y));
-                
-                // Actualizar elementos HTML
+
                 document.getElementById('time').textContent = this.time.toFixed(2);
                 document.getElementById('posX').textContent = this.position.x.toFixed(2);
                 document.getElementById('posY').textContent = this.position.y.toFixed(2);
                 document.getElementById('velX').textContent = this.velocity.x.toFixed(2);
                 document.getElementById('velY').textContent = currentVy.toFixed(2);
-                document.getElementById('velTotal').textContent = 
+                document.getElementById('velTotal').textContent =
                     Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(currentVy, 2)).toFixed(2);
-                
-                // Verificar si ha golpeado la diana
+
                 if (target && target.checkHit(this.position)) {
                     this.hasHitTarget = true;
                     handleTargetHit();
                 }
-                
-                // Verificar si ha tocado el suelo
                 if (this.position.y <= 0) {
                     this.hasHitGround = true;
                     handleGroundHit();
                 }
-                
-                // Verificar si está fuera de los límites del canvas
-                if (this.position.x * pixelsPerMeter > canvasWidth || this.position.y * pixelsPerMeter > canvasHeight) {
+                if (
+                    this.position.x * pixelsPerMeter > canvasWidth || 
+                    this.position.y * pixelsPerMeter > canvasHeight
+                ) {
                     this.hasHitGround = true;
                     handleGroundHit();
                 }
-            }
-            
-            draw() {
-                // Dibujar trayectoria
+                }
+                draw() {
                 stroke(150, 150, 255, 100);
                 strokeWeight(2);
                 noFill();
                 beginShape();
                 for (let point of this.trajectory) {
                     vertex(
-                        point.x * pixelsPerMeter,
-                        canvasHeight - point.y * pixelsPerMeter
+                    point.x * pixelsPerMeter,
+                    canvasHeight - point.y * pixelsPerMeter
                     );
                 }
                 endShape();
-                
-                // Dibujar proyectil (solo si no ha golpeado nada)
+
                 if (!this.hasHitTarget && !this.hasHitGround) {
                     fill(this.color);
                     noStroke();
                     ellipse(
-                        this.position.x * pixelsPerMeter,
-                        canvasHeight - this.position.y * pixelsPerMeter,
-                        this.radius * 2,
-                        this.radius * 2
+                    this.position.x * pixelsPerMeter,
+                    canvasHeight - this.position.y * pixelsPerMeter,
+                    this.radius * 2,
+                    this.radius * 2
                     );
                 }
+                }
             }
-        }
-        
-        function setup() {
-            let canvas = createCanvas(canvasWidth, canvasHeight);
-            canvas.parent('canvasContainer');
-            
-            // Definir el suelo
-            ground = {
+
+            function setup() {
+                let canvas = createCanvas(canvasWidth, canvasHeight);
+                canvas.parent('canvasContainer');
+
+                ground = {
                 y: 0,
                 draw: function() {
                     stroke(0);
                     strokeWeight(2);
                     line(0, canvasHeight, width, canvasHeight);
                 }
-            };
-            
-            // Referencia al elemento de mensaje de error
-            errorMessageElement = document.getElementById('error-message');
-            
-            // Eventos de botones
-            document.getElementById('startBtn').addEventListener('click', startSimulation);
-            // document.getElementById('resetBtn').addEventListener('click', resetSimulation);
-            document.getElementById('resetGameBtn').addEventListener('click', resetGame);
-            document.getElementById('rulesToggle').addEventListener('click', toggleRules);
-            
-            frameRate(60); // 60 FPS para una animación fluida
-            
-            // Crear la diana inicial
-            target = new Target();
-            
-            // Inicializar juego
-            resetGame();
-        }
-        
-        function toggleRules() {
-            let rulesElement = document.getElementById('rules');
-            let rulesToggleButton = document.getElementById('rulesToggle');
-            
-            if (rulesElement.style.display === 'none') {
+                };
+
+                errorMessageElement = document.getElementById('error-message');
+                document.getElementById('startBtn').addEventListener('click', startSimulation);
+                document.getElementById('resetGameBtn').addEventListener('click', resetGame);
+                document.getElementById('rulesToggle').addEventListener('click', toggleRules);
+
+                frameRate(60);
+                target = new Target();
+                resetGame();
+            }
+
+            function draw() {
+                background(240);
+                drawGrid();
+                ground.draw();
+                
+                if (target) target.draw();
+
+                if (isSimulationRunning && projectile && !isGameOver) {
+                projectile.update(1/60);
+                projectile.draw();
+                } else if (projectile) {
+                projectile.draw();
+                }
+                updateGameOverlay();
+            }
+
+            function drawGrid() {
+                stroke(200);
+                strokeWeight(1);
+                for (let x = 0; x <= width; x += pixelsPerMeter) {
+                line(x, 0, x, height);
+                }
+                for (let y = 0; y <= height; y += pixelsPerMeter) {
+                line(0, y, width, y);
+                }
+                stroke(0);
+                strokeWeight(2);
+                line(0, canvasHeight, width, canvasHeight);
+                line(0, 0, 0, height);
+
+                fill(0);
+                textAlign(CENTER);
+                for (let x = 0; x <= width; x += pixelsPerMeter * 5) {
+                text(x / pixelsPerMeter, x, canvasHeight + 15);
+                }
+                textAlign(RIGHT);
+                for (let y = 0; y <= height; y += pixelsPerMeter * 5) {
+                text((canvasHeight - y) / pixelsPerMeter, -5, y + 5);
+                }
+            }
+
+            function toggleRules() {
+                let rulesElement = document.getElementById('rules');
+                let rulesToggleButton = document.getElementById('rulesToggle');
+                if (rulesElement.style.display === 'none') {
                 rulesElement.style.display = 'block';
                 rulesToggleButton.textContent = 'Ocultar Reglas del Juego';
-            } else {
+                } else {
                 rulesElement.style.display = 'none';
                 rulesToggleButton.textContent = 'Mostrar Reglas del Juego';
+                }
             }
-        }
-        
-        function draw() {
-            background(240);
-            
-            // Dibujar cuadrícula
-            drawGrid();
-            
-            // Dibujar suelo
-            ground.draw();
-            
-            // Dibujar diana
-            if (target) {
-                target.draw();
-            }
-            
-            // Actualizar y dibujar proyectil si la simulación está corriendo
-            if (isSimulationRunning && projectile && !isGameOver) {
-                projectile.update(1/60); // Actualizar con el deltaTime (1/60 = 0.0166... segundos)
-                projectile.draw();
-            } else if (projectile) {
-                projectile.draw();
-            }
-            
-            // Dibujar información del juego en el canvas
-            updateGameOverlay();
-        }
-        
-        function drawGrid() {
-            stroke(200);
-            strokeWeight(1);
-            
-            // Líneas verticales
-            for (let x = 0; x <= width; x += pixelsPerMeter) {
-                line(x, 0, x, height);
-            }
-            
-            // Líneas horizontales
-            for (let y = 0; y <= height; y += pixelsPerMeter) {
-                line(0, y, width, y);
-            }
-            
-            // Ejes X e Y
-            stroke(0);
-            strokeWeight(2);
-            line(0, canvasHeight, width, canvasHeight); // Eje X
-            line(0, 0, 0, height); // Eje Y
-            
-            // Dibujar números en eje X cada 5 metros
-            fill(0);
-            textAlign(CENTER);
-            for (let x = 0; x <= width; x += pixelsPerMeter * 5) {
-                text(x / pixelsPerMeter, x, canvasHeight + 15);
-            }
-            
-            // Dibujar números en eje Y cada 5 metros
-            textAlign(RIGHT);
-            for (let y = 0; y <= height; y += pixelsPerMeter * 5) {
-                text((canvasHeight - y) / pixelsPerMeter, -5, y + 5);
-            }
-        }
-        
-        function startSimulation() {
-            if (isSimulationRunning || isGameOver) return;
-            
-            // Obtener y validar los valores de entrada
-            const initialVelocity = parseFloat(document.getElementById('initialVelocity').value);
-            const launchAngle = parseFloat(document.getElementById('launchAngle').value);
-            const initialHeight = parseFloat(document.getElementById('initialHeight').value);
-            const gravity = parseFloat(document.getElementById('gravity').value);
-            
-            // Validar entradas
-            if (validateInputs(initialVelocity, launchAngle, initialHeight, gravity)) {
-                // Crear nuevo proyectil
+
+            function startSimulation() {
+                if (isSimulationRunning || isGameOver) return;
+                const initialVelocity = parseFloat(document.getElementById('initialVelocity').value);
+                const launchAngle = parseFloat(document.getElementById('launchAngle').value);
+                const initialHeight = parseFloat(document.getElementById('initialHeight').value);
+                const gravity = parseFloat(document.getElementById('gravity').value);
+
+                if (validateInputs(initialVelocity, launchAngle, initialHeight, gravity)) {
                 projectile = new Projectile(initialVelocity, launchAngle, initialHeight, gravity);
                 isSimulationRunning = true;
-                startTime = millis() / 1000; // Tiempo actual en segundos
+                startTime = millis() / 1000;
                 errorMessageElement.textContent = '';
+                }
             }
-        }
-        
-        function resetSimulation() {
-            if (isGameOver) return;
-            
-            isSimulationRunning = false;
-            
-            // Obtener los valores actuales
-            const initialVelocity = parseFloat(document.getElementById('initialVelocity').value);
-            const launchAngle = parseFloat(document.getElementById('launchAngle').value);
-            const initialHeight = parseFloat(document.getElementById('initialHeight').value);
-            const gravity = parseFloat(document.getElementById('gravity').value);
-            
-            // Validar y crear un proyectil estático
-            if (validateInputs(initialVelocity, launchAngle, initialHeight, gravity)) {
+
+            function resetSimulation() {
+                if (isGameOver) return;
+                isSimulationRunning = false;
+                const initialVelocity = parseFloat(document.getElementById('initialVelocity').value);
+                const launchAngle = parseFloat(document.getElementById('launchAngle').value);
+                const initialHeight = parseFloat(document.getElementById('initialHeight').value);
+                const gravity = parseFloat(document.getElementById('gravity').value);
+
+                if (validateInputs(initialVelocity, launchAngle, initialHeight, gravity)) {
                 projectile = new Projectile(initialVelocity, launchAngle, initialHeight, gravity);
-                projectile.trajectory = []; // Limpiar trayectoria
+                projectile.trajectory = [];
                 errorMessageElement.textContent = '';
-                
-                // Reiniciar valores mostrados
                 document.getElementById('time').textContent = '0.00';
                 document.getElementById('posX').textContent = '0.00';
                 document.getElementById('posY').textContent = initialHeight.toFixed(2);
-                document.getElementById('velX').textContent = (initialVelocity * Math.cos(launchAngle * Math.PI / 180)).toFixed(2);
-                document.getElementById('velY').textContent = (initialVelocity * Math.sin(launchAngle * Math.PI / 180)).toFixed(2);
+                document.getElementById('velX').textContent = (
+                    initialVelocity * Math.cos(launchAngle * Math.PI / 180)
+                ).toFixed(2);
+                document.getElementById('velY').textContent = (
+                    initialVelocity * Math.sin(launchAngle * Math.PI / 180)
+                ).toFixed(2);
                 document.getElementById('velTotal').textContent = initialVelocity.toFixed(2);
+                }
             }
-        }
-        
-        function resetGame() {
-            // Reiniciar variables del juego
-            score = 0;
-            lives = 3;
-            isGameOver = false;
-            
-            // Actualizar UI
-            updateScoreDisplay();
-            updateLivesDisplay();
-            updateMedalDisplay();
-            
-            // Crear nueva diana
-            target = new Target();
-            
-            // Reiniciar simulación
-            resetSimulation();
-            
-            // Limpiar mensaje del juego
-            document.getElementById('gameMessage').textContent = '¡Intenta golpear la diana!';
-        }
-        
-        function handleTargetHit() {
-            // Aumentar puntuación
-            score += 10;
-            updateScoreDisplay();
-            updateMedalDisplay();
-            
-            // Mostrar mensaje
-            document.getElementById('gameMessage').textContent = '¡Excelente tiro! +10 puntos';
-            
-            // Detener simulación
-            isSimulationRunning = false;
-            
-            // Crear nueva diana
-            setTimeout(() => {
+
+            function resetGame() {
+                score = 0;
+                lives = 3;
+                isGameOver = false;
+                updateScoreDisplay();
+                updateLivesDisplay();
+                updateMedalDisplay();
+                target = new Target();
+                resetSimulation();
+                document.getElementById('gameMessage').textContent = '¡Intenta golpear la diana!';
+            }
+
+            function handleTargetHit() {
+                score += 10;
+                updateScoreDisplay();
+                updateMedalDisplay();
+                document.getElementById('gameMessage').textContent = '¡Excelente tiro! +10 puntos';
+                isSimulationRunning = false;
+                setTimeout(() => {
                 if (!isGameOver) {
                     target = new Target();
                     resetSimulation();
                 }
-            }, 1000);
-        }
-        
-        function handleGroundHit() {
-            // Reducir vidas
-            lives--;
-            updateLivesDisplay();
-            
-            // Mostrar mensaje
-            document.getElementById('gameMessage').textContent = '¡Has fallado! -1 vida';
-            
-            // Verificar si el juego ha terminado
-            if (lives <= 0) {
-                endGame();
+                }, 1000);
             }
-            
-            // Detener simulación
-            isSimulationRunning = false;
-            
-            // Reiniciar para el siguiente intento
-            setTimeout(() => {
+
+            function handleGroundHit() {
+                lives--;
+                updateLivesDisplay();
+                document.getElementById('gameMessage').textContent = '¡Has fallado! -1 vida';
+                if (lives <= 0) {
+                endGame();
+                }
+                isSimulationRunning = false;
+                setTimeout(() => {
                 if (!isGameOver) {
                     resetSimulation();
                 }
-            }, 1000);
-        }
-        
-        function endGame() {
-            isGameOver = true;
-            
-            let message = '¡Juego terminado! ';
-            if (score >= 200) {
+                }, 1000);
+            }
+
+            function endGame() {
+                isGameOver = true;
+                let message = '¡Juego terminado! ';
+                if (score >= 200) {
                 message += 'Medalla de ORO conseguida!';
-            } else if (score >= 100) {
+                } else if (score >= 100) {
                 message += 'Medalla de PLATA conseguida!';
-            } else if (score >= 50) {
+                } else if (score >= 50) {
                 message += 'Medalla de BRONCE conseguida!';
-            } else {
+                } else {
                 message += 'Sin medalla esta vez. ¡Inténtalo de nuevo!';
+                }
+                document.getElementById('gameMessage').textContent = message;
             }
-            
-            document.getElementById('gameMessage').textContent = message;
-        }
-        
-        function updateScoreDisplay() {
-            document.getElementById('score').textContent = score;
-        }
-        
-        function updateLivesDisplay() {
-            let livesHTML = '';
-            for (let i = 0; i < lives; i++) {
+
+            function updateScoreDisplay() {
+                document.getElementById('score').textContent = score;
+            }
+            function updateLivesDisplay() {
+                let livesHTML = '';
+                for (let i = 0; i < lives; i++) {
                 livesHTML += '❤️';
+                }
+                document.getElementById('lives').textContent = livesHTML;
             }
-            document.getElementById('lives').textContent = livesHTML;
-        }
-        
-        function updateMedalDisplay() {
-            let medalElement = document.getElementById('medal');
-            
-            if (score >= 200) {
+            function updateMedalDisplay() {
+                let medalElement = document.getElementById('medal');
+                if (score >= 200) {
                 medalElement.textContent = '🥇 ORO';
                 medalElement.style.color = '#FFD700';
-            } else if (score >= 100) {
+                } else if (score >= 100) {
                 medalElement.textContent = '🥈 PLATA';
                 medalElement.style.color = '#C0C0C0';
-            } else if (score >= 50) {
+                } else if (score >= 50) {
                 medalElement.textContent = '🥉 BRONCE';
                 medalElement.style.color = '#CD7F32';
-            } else {
+                } else {
                 medalElement.textContent = 'Ninguna';
                 medalElement.style.color = '#999';
+                }
             }
-        }
-        
-        function updateGameOverlay() {
-            // Mostrar información del juego en el canvas
-            let overlayElement = document.getElementById('gameOverlay');
-            overlayElement.innerHTML = `
-                <div>Objetivo: X=${target.position.x.toFixed(1)}m, Y=${target.position.y.toFixed(1)}m</div>
-            `;
-        }
-        
-        function validateInputs(initialVelocity, launchAngle, initialHeight, gravity) {
-            // Validar que todos los campos sean números
-            if (isNaN(initialVelocity) || isNaN(launchAngle) || isNaN(initialHeight) || isNaN(gravity)) {
+
+            function updateGameOverlay() {
+                let overlayElement = document.getElementById('gameOverlay');
+                overlayElement.innerHTML = `
+                <div>Objetivo: X=${target.position.x.toFixed(1)}m, 
+                            Y=${target.position.y.toFixed(1)}m
+                </div>
+                `;
+            }
+
+            function validateInputs(initialVelocity, launchAngle, initialHeight, gravity) {
+                if (
+                isNaN(initialVelocity) || 
+                isNaN(launchAngle) || 
+                isNaN(initialHeight) || 
+                isNaN(gravity)
+                ) {
                 errorMessageElement.textContent = 'Error: Todos los campos deben ser números.';
                 return false;
-            }
-            
-            // Validar rangos
-            if (initialVelocity <= 0 || initialVelocity > 100) {
-                errorMessageElement.textContent = 'Error: La velocidad inicial debe estar entre 1 y 100 m/s.';
+                }
+                if (initialVelocity <= 0 || initialVelocity > 100) {
+                errorMessageElement.textContent = 'Error: Velocidad inicial entre 1 y 100 m/s.';
                 return false;
-            }
-            
-            if (launchAngle <= 0 || launchAngle >= 90) {
-                errorMessageElement.textContent = 'Error: El ángulo debe estar entre 1 y 89 grados.';
+                }
+                if (launchAngle <= 0 || launchAngle >= 90) {
+                errorMessageElement.textContent = 'Error: Ángulo entre 1 y 89 grados.';
                 return false;
-            }
-            
-            if (initialHeight < 0 || initialHeight > 100) {
-                errorMessageElement.textContent = 'Error: La altura inicial debe estar entre 0 y 100 metros.';
+                }
+                if (initialHeight < 0 || initialHeight > 100) {
+                errorMessageElement.textContent = 'Error: Altura inicial entre 0 y 100 metros.';
                 return false;
-            }
-            
-            if (gravity <= 0 || gravity > 20) {
-                errorMessageElement.textContent = 'Error: La gravedad debe estar entre 1 y 20 m/s².';
+                }
+                if (gravity <= 0 || gravity > 20) {
+                errorMessageElement.textContent = 'Error: Gravedad entre 1 y 20 m/s².';
                 return false;
+                }
+                return true;
             }
-            
-            return true;
-        }
-    </script>
-</body>
+        </script>
+
+        <!-- Bootstrap JS (opcional, si requieres componentes dinámicos de Bootstrap) -->
+        <script 
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+        </script>
+    </body>
 </html>
